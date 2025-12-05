@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦊 Fox-Text Generator</title>
+    <style>
+        /* CSS Variables for Easy Theming */
+        :root {
+            /* Light Mode Defaults */
+            --bg-color: #f4f4f9;
+            --text-color: #333;
+            --container-bg: #fff;
+            --border-color: #ccc;
+            --button-bg: #e0e0e0;
+            --button-hover: #d0d0d0;
+            --fox-color: #ff9900; /* Fox inspired accent */
+        }
+
+        /* Dark Mode Override */
+        body.dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --container-bg: #1e1e1e;
+            --border-color: #333;
+            --button-bg: #3a3a3a;
+            --button-hover: #4a4a4a;
+        }
+
+        /* General Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: var(--container-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: var(--fox-color);
+            margin-bottom: 5px;
+        }
+
+        /* Textareas */
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1.1em;
+            line-height: 1.5;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            resize: vertical;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        textarea#output-text {
+            cursor: default;
+        }
+
+        /* Controls and Buttons */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        button {
+            flex-grow: 1;
+            padding: 12px 20px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: var(--button-bg);
+            color: var(--text-color);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        #copy-button {
+            background-color: var(--fox-color);
+            color: white;
+        }
+        #copy-button:hover {
+            background-color: #cc7a00;
+        }
+        
+        /* Footer */
+        footer {
+            margin-top: 20px;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px 15px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body id="body">
+
+    <div class="container">
+        <header>
+            <h1>🦊 Fox-Text Generator</h1>
+            <p>将您的输入文本中的每个字符都替换为狐狸 🦊。</p>
+        </header>
+
+        <main>
+            <textarea id="input-text" placeholder="在这里输入文字..."></textarea>
+            <textarea id="output-text" readonly placeholder="生成结果将显示在这里..."></textarea>
+
+            <div class="controls">
+                <button id="copy-button">🦊 复制代码</button>
+                <button id="mode-toggle">切换模式 (亮/暗)</button>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <p>基于 nanancc/pig-text 灵感修改，由编程大师为您定制。</p>
+    </footer>
+
+    <script>
+        const INPUT_TEXT = document.getElementById('input-text');
+        const OUTPUT_TEXT = document.getElementById('output-text');
+        const COPY_BUTTON = document.getElementById('copy-button');
+        const MODE_TOGGLE = document.getElementById('mode-toggle');
+        const BODY = document.getElementById('body');
+        
+        const FOX_EMOJI = '🦊';
+
+        /**
+         * 核心功能：将输入文本中的非空白字符替换为狐狸 emoji。
+         */
+        function generateFoxText() {
+            const inputText = INPUT_TEXT.value;
+            
+            // 使用正则表达式 /\S/g (匹配所有非空白字符) 进行替换
+            // 这样可以保留用户的换行和空格，只替换实际内容。
+            const foxifiedText = inputText.replace(/\S/g, FOX_EMOJI);
+            
+            OUTPUT_TEXT.value = foxifiedText;
+        }
+
+        /**
+         * 切换亮/暗模式
+         */
+        function toggleDarkMode() {
+            BODY.classList.toggle('dark-mode');
+            const isDark = BODY.classList.contains('dark-mode');
+            localStorage.setItem('foxTextDarkMode', isDark ? 'true' : 'false');
+            updateModeToggleText(isDark);
+        }
+
+        /**
+         * 根据模式更新切换按钮的文本
+         */
+        function updateModeToggleText(isDark) {
+            MODE_TOGGLE.textContent = isDark ? '切换模式 (亮)' : '切换模式 (暗)';
+        }
+
+        /**
+         * 复制生成的文本到剪贴板
+         */
+        function copyOutput() {
+            if (OUTPUT_TEXT.value) {
+                // 使用现代 Clipboard API
+                navigator.clipboard.writeText(OUTPUT_TEXT.value).then(() => {
+                    // 临时改变按钮状态以示成功
+                    const originalText = COPY_BUTTON.textContent;
+                    COPY_BUTTON.textContent = '✅ 已复制！';
+                    
+                    setTimeout(() => {
+                        COPY_BUTTON.textContent = originalText;
+                    }, 1500);
+
+                }).catch(err => {
+                    // 备用方案（针对旧浏览器或限制）
+                    OUTPUT_TEXT.select();
+                    document.execCommand('copy');
+                });
+            }
+        }
+
+        /**
+         * 初始化加载
+         */
+        function initialize() {
+            // 1. 检查用户的系统偏好或 localStorage 来设置初始模式
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const storedMode = localStorage.getItem('foxTextDarkMode');
+            
+            let initialDark = false;
+            if (storedMode !== null) {
+                initialDark = storedMode === 'true';
+            } else {
+                initialDark = prefersDark;
+            }
+
+            if (initialDark) {
+                BODY.classList.add('dark-mode');
+            }
+            updateModeToggleText(initialDark);
+            
+            // 2. 绑定事件监听器
+            INPUT_TEXT.addEventListener('input', generateFoxText);
+            COPY_BUTTON.addEventListener('click', copyOutput);
+            MODE_TOGGLE.addEventListener('click', toggleDarkMode);
+
+            // 初始生成（如果URL中有内容，尽管这个应用通常不会有）
+            generateFoxText();
+        }
+
+        // 页面加载完成后运行初始化
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>
