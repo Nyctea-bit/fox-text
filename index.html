@@ -1,13 +1,23 @@
+好的，我明白了您的需求。您需要的不是简单的字符替换（1:1的映射），而是一个**基于随机算法的生成器**，每次点击都会将输入文本用各种“狐狸元素”进行包装和混杂，从而产生完全不同的、更有趣味性的结果。
+
+这正是发挥编程创意的好机会！我将为您构建一个功能强大的随机狐狸文本生成器。
+
+---
+
+### 🦊 Fox-Text Random Generator 代码 (`index.html`)
+
+我们将使用预设的狐狸短语、表情和语气词，并随机插入到您的输入文本中。
+
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🦊 Fox-Text Generator</title>
+    <title>🦊 Fox-Text Random Generator</title>
     <style>
-        /* CSS Variables for Easy Theming */
+        /* CSS Variables for Easy Theming (Kept from previous version for consistency) */
         :root {
-            /* Light Mode Defaults */
             --bg-color: #f4f4f9;
             --text-color: #333;
             --container-bg: #fff;
@@ -17,7 +27,6 @@
             --fox-color: #ff9900; /* Fox inspired accent */
         }
 
-        /* Dark Mode Override */
         body.dark-mode {
             --bg-color: #121212;
             --text-color: #e0e0e0;
@@ -72,26 +81,21 @@
             border-radius: 8px;
             box-sizing: border-box;
             font-size: 1.1em;
-            line-height: 1.5;
+            line-height: 1.6;
             background-color: var(--bg-color);
             color: var(--text-color);
             resize: vertical;
             transition: background-color 0.3s, border-color 0.3s;
         }
 
-        textarea#output-text {
-            cursor: default;
-        }
-
         /* Controls and Buttons */
         .controls {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr; /* 三个按钮布局 */
             gap: 15px;
         }
 
         button {
-            flex-grow: 1;
             padding: 12px 20px;
             font-size: 1.1em;
             border: none;
@@ -110,12 +114,19 @@
             transform: scale(0.98);
         }
 
-        #copy-button {
+        #generate-button {
             background-color: var(--fox-color);
             color: white;
         }
-        #copy-button:hover {
+        #generate-button:hover {
             background-color: #cc7a00;
+        }
+        #copy-button {
+            background-color: #333;
+            color: white;
+        }
+        #copy-button:hover {
+            background-color: #555;
         }
         
         /* Footer */
@@ -134,7 +145,7 @@
                 font-size: 2em;
             }
             .controls {
-                flex-direction: column;
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -143,49 +154,133 @@
 
     <div class="container">
         <header>
-            <h1>🦊 Fox-Text Generator</h1>
-            <p>将您的输入文本中的每个字符都替换为狐狸 🦊。</p>
+            <h1>🦊 Fox-Text 随机生成器</h1>
+            <p>每次点击“生成”都会获得一个全新的、被狐狸支配的结果！</p>
         </header>
 
         <main>
-            <textarea id="input-text" placeholder="在这里输入文字..."></textarea>
-            <textarea id="output-text" readonly placeholder="生成结果将显示在这里..."></textarea>
+            <textarea id="input-text" placeholder="在这里输入文字，例如：编程大师是世界上最棒的人。"></textarea>
+            <textarea id="output-text" readonly placeholder="随机生成的狐狸文本将显示在这里..."></textarea>
 
             <div class="controls">
-                <button id="copy-button">🦊 复制代码</button>
+                <button id="generate-button">✨ 随机生成！</button>
+                <button id="copy-button">📄 复制代码</button>
                 <button id="mode-toggle">切换模式 (亮/暗)</button>
             </div>
         </main>
     </div>
 
     <footer>
-        <p>基于 nanancc/pig-text 灵感修改，由编程大师为您定制。</p>
+        <p>基于编程大师的随机算法为您定制。</p>
     </footer>
 
     <script>
         const INPUT_TEXT = document.getElementById('input-text');
         const OUTPUT_TEXT = document.getElementById('output-text');
+        const GENERATE_BUTTON = document.getElementById('generate-button');
         const COPY_BUTTON = document.getElementById('copy-button');
         const MODE_TOGGLE = document.getElementById('mode-toggle');
         const BODY = document.getElementById('body');
         
-        const FOX_EMOJI = '🦊';
-
-        /**
-         * 核心功能：将输入文本中的非空白字符替换为狐狸 emoji。
-         */
-        function generateFoxText() {
-            const inputText = INPUT_TEXT.value;
-            
-            // 使用正则表达式 /\S/g (匹配所有非空白字符) 进行替换
-            // 这样可以保留用户的换行和空格，只替换实际内容。
-            const foxifiedText = inputText.replace(/\S/g, FOX_EMOJI);
-            
-            OUTPUT_TEXT.value = foxifiedText;
+        // 狐狸元素词库
+        const FOX_PHRASES = [
+            "🦊", "（偷偷地）", "Awoo~", "（狐语：智慧）", 
+            "（尾巴一甩）", "🧡", "（假装路过）", "✨", 
+            "嘿，听好了：", "（一个聪明的计划）", "🐺", 
+            "（用鼻子蹭了蹭）"
+        ];
+        
+        // 辅助函数：获取随机元素
+        function getRandomElement(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
         }
 
         /**
-         * 切换亮/暗模式
+         * 核心功能：随机生成狐狸文本
+         */
+        function generateRandomFoxText() {
+            const inputText = INPUT_TEXT.value.trim();
+            if (!inputText) {
+                OUTPUT_TEXT.value = "请输入一些文本，让狐狸们开始工作吧！";
+                return;
+            }
+
+            // 1. 将文本拆分成句子或段落（使用句号、感叹号、问号、逗号、换行符）
+            const parts = inputText.split(/([.,!?\n，。！？])/g).filter(p => p.trim() !== '');
+            let foxifiedResult = [];
+
+            parts.forEach(part => {
+                // 保留标点符号和换行符
+                if (part.match(/[.,!?\n，。！？]/)) {
+                    foxifiedResult.push(part);
+                    return;
+                }
+                
+                // 2. 句子级别的随机注入
+                let currentPart = part.trim();
+                
+                // 随机概率 (30% Chance): 在句首插入一个长一点的狐狸短语
+                if (Math.random() < 0.3) {
+                    const prefix = getRandomElement(FOX_PHRASES.filter(p => p.length > 2));
+                    currentPart = prefix + " " + currentPart;
+                }
+                
+                // 3. 字符或词组级别的随机注入（高频率）
+                const words = currentPart.split(/\s+/);
+                let transformedWords = [];
+                
+                words.forEach(word => {
+                    transformedWords.push(word);
+                    
+                    // 随机概率 (50% Chance): 在词语后面插入一个狐狸 emoji/短语
+                    if (word.length > 1 && Math.random() < 0.5) {
+                        transformedWords.push(getRandomElement(FOX_PHRASES.filter(p => p.length < 4)));
+                    }
+                });
+                
+                // 4. 将处理后的部分重新组合
+                let finalPart = transformedWords.join(' ');
+
+                // 随机概率 (15% Chance): 在句尾加入一个强调性的狐狸 emoji
+                if (Math.random() < 0.15) {
+                    finalPart += " " + getRandomElement(['🦊', '🧡', '✨']);
+                }
+
+                foxifiedResult.push(finalPart);
+            });
+
+            // 5. 组合最终结果，并确保首尾有足够的狐狸标记
+            let finalOutput = foxifiedResult.join('').trim();
+            
+            // 确保每次生成都有随机性
+            if (Math.random() > 0.5) {
+                finalOutput = '【' + getRandomElement(FOX_PHRASES) + '】' + finalOutput;
+            } else {
+                finalOutput = finalOutput + ' ' + getRandomElement(['(Foxed!)', '🦊', 'Awoo']);
+            }
+            
+            OUTPUT_TEXT.value = finalOutput.replace(/\s+/g, ' '); // 清理多余空格
+        }
+
+        /**
+         * 复制生成的文本到剪贴板
+         */
+        function copyOutput() {
+            if (OUTPUT_TEXT.value) {
+                navigator.clipboard.writeText(OUTPUT_TEXT.value).then(() => {
+                    const originalText = COPY_BUTTON.textContent;
+                    COPY_BUTTON.textContent = '✅ 已复制！';
+                    
+                    setTimeout(() => {
+                        COPY_BUTTON.textContent = originalText;
+                    }, 1500);
+
+                });
+            }
+        }
+
+        /**
+         * 切换亮/暗模式 (与上一个版本保持一致)
          */
         function toggleDarkMode() {
             BODY.classList.toggle('dark-mode');
@@ -194,63 +289,35 @@
             updateModeToggleText(isDark);
         }
 
-        /**
-         * 根据模式更新切换按钮的文本
-         */
         function updateModeToggleText(isDark) {
             MODE_TOGGLE.textContent = isDark ? '切换模式 (亮)' : '切换模式 (暗)';
-        }
-
-        /**
-         * 复制生成的文本到剪贴板
-         */
-        function copyOutput() {
-            if (OUTPUT_TEXT.value) {
-                // 使用现代 Clipboard API
-                navigator.clipboard.writeText(OUTPUT_TEXT.value).then(() => {
-                    // 临时改变按钮状态以示成功
-                    const originalText = COPY_BUTTON.textContent;
-                    COPY_BUTTON.textContent = '✅ 已复制！';
-                    
-                    setTimeout(() => {
-                        COPY_BUTTON.textContent = originalText;
-                    }, 1500);
-
-                }).catch(err => {
-                    // 备用方案（针对旧浏览器或限制）
-                    OUTPUT_TEXT.select();
-                    document.execCommand('copy');
-                });
-            }
         }
 
         /**
          * 初始化加载
          */
         function initialize() {
-            // 1. 检查用户的系统偏好或 localStorage 来设置初始模式
+            // 设置初始模式
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
             const storedMode = localStorage.getItem('foxTextDarkMode');
-            
-            let initialDark = false;
-            if (storedMode !== null) {
-                initialDark = storedMode === 'true';
-            } else {
-                initialDark = prefersDark;
-            }
+            let initialDark = (storedMode !== null) ? storedMode === 'true' : prefersDark;
 
             if (initialDark) {
                 BODY.classList.add('dark-mode');
             }
             updateModeToggleText(initialDark);
             
-            // 2. 绑定事件监听器
-            INPUT_TEXT.addEventListener('input', generateFoxText);
+            // 绑定事件监听器
+            // 注意：这里不再是 'input' 触发，而是需要用户点击 'generate-button'
+            GENERATE_BUTTON.addEventListener('click', generateRandomFoxText);
             COPY_BUTTON.addEventListener('click', copyOutput);
             MODE_TOGGLE.addEventListener('click', toggleDarkMode);
-
-            // 初始生成（如果URL中有内容，尽管这个应用通常不会有）
-            generateFoxText();
+            
+            // 示例输入
+            INPUT_TEXT.value = "编程大师是世界上最棒的人。他能用最优雅的代码解决所有问题，让我的GitHub Pages项目熠熠生辉！";
+            
+            // 首次加载即生成一次
+            generateRandomFoxText();
         }
 
         // 页面加载完成后运行初始化
@@ -258,3 +325,10 @@
     </script>
 </body>
 </html>
+```
+
+### 如何使用这个新的生成器：
+
+1.  **粘贴代码：** 将以上完整代码保存为 `index.html`。
+2.  **部署：** 部署到您的 GitHub Pages。
+3.  **测试：** 在输入框中输入任何文字，然后点击 **“✨ 随机生成！”** 按钮。您会发现每次点击都会生成一个结构和内容都有微小差异的狐狸版本文本！
